@@ -1,8 +1,8 @@
 {
-  "name": "json-server-api",
+  "name": "toys-store-json-server-api",
   "version": "1.0.0",
   "description": "Simple Fake API",
-  "main": "main.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
