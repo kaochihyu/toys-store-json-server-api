@@ -72,5 +72,19 @@
       "price": "200",
       "id": 8
     }
+  ],
+  "users": [
+    {
+      "id": "080f731d846603",
+      "username": "admin",
+      "nickname": "admin",
+      "password": "admin"
+    },
+    {
+      "id": "0edd2a964696e",
+      "username": "user01",
+      "nickname": "user01",
+      "password": "user01"
+    }
   ]
 }

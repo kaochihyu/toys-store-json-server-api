@@ -1,126 +1,172 @@
-const fs = require('fs')
-const bodyParser = require('body-parser')
 const jsonServer = require('json-server')
-const jwt = require('jsonwebtoken')
-const { nextTick } = require('process')
-
+const jwt = require('jsonwebtoken');
 const server = jsonServer.create()
 const router = jsonServer.router('./db.json')
-const userdb = JSON.parse(fs.readFileSync('./users.json', 'UTF-8'))
+const middlewares = jsonServer.defaults()
 
-server.use(bodyParser.urlencoded({ extended: true }))
-server.use(bodyParser.json())
-server.use(jsonServer.defaults());
+// @see: https://github.com/typicode/json-server/issues/401
+const db = router.db
 
-const SECRET_KEY = '123456789'
+const PORT = 8000 || process.env.PORT
+const jwtSecretKey = process.env.JWT_KEY || 'test_key'
 
-const expiresIn = '1h'
-
-// Create a token from a payload 
-function createToken(payload) {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn })
+const ERROR_CODE = {
+  INVALID: 1,
+  UNAUTHORIZED: 2,
+  DUPLICATED: 3
 }
 
-// Verify the token 
-function verifyToken(token) {
-  return jwt.verify(token, SECRET_KEY, (err, decode) => decode !== undefined ? decode : err)
-}
-
-// Check if the user exists in database
-function isAuthenticated({ username, password }) {
-  return userdb.users.findIndex(user => user.username === username && user.password === password) !== -1
-}
-
-// Register New User
-server.post('/register', (req, res) => {
-  console.log("register endpoint called; request body:");
-  console.log(req.body);
-  const { username, password, nickname } = req.body;
-
-  if (isAuthenticated({ username, password }) === true) {
-    const status = 401;
-    const message = 'Username and Password already exist';
-    res.status(status).json({ status, message });
-    return
-  }
-
-  fs.readFile("./users.json", (err, data) => {
-    if (err) {
-      const status = 401
-      const message = err
-      res.status(status).json({ status, message })
-      return
-    };
-
-    // Get current users data
-    var data = JSON.parse(data.toString());
-
-    // Get the id of last user
-    var last_item_id = data.users[data.users.length - 1].id;
-
-    //Add new user
-    data.users.push({ id: last_item_id + 1, username: username, password: password, nickname: nickname }); //add some data
-    var writeData = fs.writeFile("./users.json", JSON.stringify(data), (err, result) => {  // WRITE
-      if (err) {
-        const status = 401
-        const message = err
-        res.status(status).json({ status, message })
-        return
-      }
-    });
-  });
-
-  // Create token for new user
-  const access_token = createToken({ username, password })
-  console.log("Access Token:" + access_token);
-  res.status(200).json({ access_token })
+const makeError = (code, message) => ({
+  code,
+  message,
+  ok: 0
 })
 
-// Login to one of the users from ./users.json
-server.post('/login', (req, res) => {
-  console.log("login endpoint called; request body:");
-  console.log(req.body);
-  const { username, password } = req.body;
-  if (isAuthenticated({ username, password }) === false) {
-    const status = 401
-    const message = 'Incorrect username or password'
-    res.status(status).json({ status, message })
-    return
+server.use(middlewares)
+server.use(jsonServer.bodyParser)
+server.use((req, res, next) => {
+  if (req.method !== 'POST') return next()
+  if (req.body.id) {
+    res.status(400)
+    return res.json(makeError(ERROR_CODE.INVALID, 'id will be generated in server, do not modify it by yourself.'))
   }
-  const access_token = createToken({ username, password })
-  console.log("Access Token:" + access_token);
-  res.status(200).json({ access_token })
+  req.body.createdAt = Date.now()
+  next()
 })
 
-server.get('/me', (req, res, next) => {
-  if (req.headers.authorization === undefined || req.headers.authorization.split(' ')[0] !== 'Bearer') {
-    const status = 401
-    const message = 'Error in authorization format'
-    res.status(status).json({ status, message })
-    return
-  }
-  try {
-    let verifyTokenResult;
-    verifyTokenResult = verifyToken(req.headers.authorization.split(' ')[1]);
 
-    if (verifyTokenResult instanceof Error) {
-      const status = 401
-      const message = 'Access token not provided'
-      res.status(status).json({ status, message })
-      return
+// 資料驗證
+const validator = requiredFields => (req, res, next) => {
+  for (let i = 0; i < requiredFields.length; i++) {
+    const requiredField = requiredFields[i]
+    if (!req.body[requiredField] || !req.body[requiredField].trim()) {
+      res.status(400)
+      res.json(makeError(
+        ERROR_CODE.INVALID,
+        `Invalid request, "${requiredField}" is required`
+      ))
+      return;
     }
-    const data = userdb.users.find(e => e.username === verifyTokenResult.username)
-    res.status(200).json({ data })
-    next()
-  } catch (err) {
-    const status = 401
-    const message = 'Error access_token is revoked'
-    res.status(status).json({ status, message })
   }
+  next()
+}
+
+const preventEditDefault = (req, res, next) => {
+  if (req.method === 'GET') return next()
+  if (Number(req.params.id) <= 2) {
+    res.status(401)
+    res.json(makeError(ERROR_CODE.UNAUTHORIZED, 'You are not allow to modify default data'))
+    return
+  }
+  next()
+}
+
+const requireLogin = (req, res, next) => {
+  let authHeader = req.headers['authorization'] || ''
+  const token = authHeader.replace('Bearer ', '')
+  let jwtData
+
+  try {
+    jwtData = jwt.verify(token, jwtSecretKey);
+  } catch (err) {
+
+  }
+
+  if (!jwtData) {
+    res.status(401)
+    return res.json(makeError(ERROR_CODE.UNAUTHORIZED, 'Unauthorized'))
+  }
+
+  req.jwtData = jwtData
+  next()
+}
+
+// server.all('/comments/:id', preventEditDefault)
+// server.post('/comments', validator(['nickname', 'body']))
+// server.put('/comments/:id', validator(['nickname', 'body', 'createdAt']))
+
+server.post('/register', (req, res, next) => {
+  const { username, password, nickname } = req.body
+  if (!username || !password || !nickname) {
+    res.status(400)
+    return res.json(makeError(ERROR_CODE.INVALID, "username, password and nickname are required"))
+  }
+
+  const user = db.get('users').find({ username }).value()
+  if (user) {
+    res.status(500)
+    return res.json(makeError(ERROR_CODE.DUPLICATED, 'User exists, please login or change username'))
+  }
+
+  const userId = Math.random().toString('16').replace('.', '')
+  db.get('users')
+    .push({
+      id: userId,
+      username: req.body.username,
+      nickname: req.body.nickname,
+      password: req.body.password,
+    })
+    .write()
+
+  res.json({
+    ok: 1,
+    token: jwt.sign({ username: req.body.username, userId }, jwtSecretKey)
+  })
 })
 
-server.use(router)
+server.post('/login', (req, res, next) => {
+  const { username, password } = req.body
+  if (!username || !password) {
+    res.status(400)
+    return res.json(makeError(ERROR_CODE.INVALID, "username and password are required"))
+  }
 
-server.listen(8000, () => {
-  console.log('Run Auth API Server')
+  const user = db.get('users')
+    .find({ username, password })
+    .value()
+
+  if (!user) {
+    res.status(400)
+    return res.json(makeError(ERROR_CODE.INVALID, "username or password is invalid"))
+  }
+
+  return res.json({
+    ok: 1,
+    token: jwt.sign({ username, userId: user.id }, jwtSecretKey)
+  })
+})
+
+server.get('/me', requireLogin, (req, res) => {
+  const user = db.get('users')
+    .find({ username: req.jwtData.username })
+    .value()
+
+  return res.json({
+    ok: 1,
+    data: user
+  })
+})
+
+server.all('/users/:id', preventEditDefault)
+server.post('/users', (req, res, next) => {
+  res.json({
+    ok: 0,
+    message: 'use /register instead'
+  })
+})
+server.put('/users/:id', validator(['nickname', 'username', 'createdAt']))
+
+
+// required login
+server.all('/posts/:id', preventEditDefault)
+server.post('/posts', requireLogin, validator(['title', 'body']), (req, res, next) => {
+  req.body.userId = req.jwtData.userId
+  next()
+})
+server.put('/posts/:id', requireLogin, validator(['title', 'body', 'createdAt', 'userId']))
+
+// Use default router
+server.use(router)
+server.listen(PORT, () => {
+  console.log('JSON Server is running: http://localhost:' + PORT)
 })
