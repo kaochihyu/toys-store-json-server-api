@@ -1,0 +1,76 @@
+{
+  "items": [
+    {
+      "name": "Toy car",
+      "description": "Push it, pull it and the car run. It can let child to be trained the arms muscles.",
+      "tag": "2-6 years",
+      "picture": "https://i.imgur.com/7tShMid.png",
+      "quantity": "2",
+      "price": "100",
+      "id": 1
+    },
+    {
+      "name": "Dinasour",
+      "description": "A Pink Dinasour. Play it as you like. Not only for boy but also for girl.",
+      "tag": "4-8 years",
+      "picture": "https://i.imgur.com/A9ZVTdR.png",
+      "quantity": "20",
+      "price": "160",
+      "id": 2
+    },
+    {
+      "name": "Bateman",
+      "description": "Push it, pull it and the car run. It can let child to be trained the arms muscles.",
+      "tag": "4-8 years",
+      "picture": "https://i.imgur.com/W8Qitxo.png",
+      "quantity": "4",
+      "price": "100",
+      "id": 3
+    },
+    {
+      "name": "Letter Magnet",
+      "description": "There are 26 letters and others. Spell the word and gave it for fun.",
+      "tag": "4-8 years",
+      "picture": "https://i.imgur.com/X88mdlO.png",
+      "quantity": "20",
+      "price": "299",
+      "id": 4
+    },
+    {
+      "name": "Crayon",
+      "description": "12 colors crayon. Pick up you favorite color and make your world more colorful!",
+      "tag": "5-12 years",
+      "picture": "https://i.imgur.com/egJ4uUh.png",
+      "quantity": "20",
+      "price": "100",
+      "id": 5
+    },
+    {
+      "name": "Crown",
+      "description": "Luxury, shinning crown. Wear this crown to perform the best you.",
+      "tag": "5-12 years",
+      "picture": "https://i.imgur.com/Af8B8rE.png",
+      "quantity": "20",
+      "price": "220",
+      "id": 6
+    },
+    {
+      "name": "Video game",
+      "description": "The most intersting video game. Play with friends on holiday!",
+      "tag": "5-12 years",
+      "picture": "https://i.imgur.com/jymufkf.png",
+      "quantity": "20",
+      "price": "350",
+      "id": 7
+    },
+    {
+      "name": "Teddy bear",
+      "description": "Your best teddy bear. Hug it, kiss it, be with it every day and night. You won't be alone.",
+      "tag": "2-6 years",
+      "picture": "https://i.imgur.com/ojMcnBm.png",
+      "quantity": "20",
+      "price": "200",
+      "id": 8
+    }
+  ]
+}
