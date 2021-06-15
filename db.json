@@ -1,12 +1,12 @@
 {
   "items": [
     {
-      "name": "Toy car",
-      "description": "Push it, pull it and the car run. It can let child to be trained the arms muscles.",
-      "tag": "2-6 years",
-      "picture": "https://i.imgur.com/7tShMid.png",
-      "quantity": "2",
-      "price": "100",
+      "name": "Toy Car",
+      "description": "Pull it and push it. The car will run so fast and cool. Enjoy it!",
+      "tag": "4-8 years",
+      "picture": "https://i.imgur.com/M2WdJh5.png",
+      "quantity": "10",
+      "price": "160",
       "id": 1
     },
     {
@@ -78,13 +78,15 @@
       "id": "080f731d846603",
       "username": "admin",
       "nickname": "admin",
-      "password": "admin"
+      "password": "admin",
+      "cart": []
     },
     {
       "id": "0edd2a964696e",
       "username": "user01",
       "nickname": "user01",
-      "password": "user01"
+      "password": "user01",
+      "cart": []
     }
   ]
 }

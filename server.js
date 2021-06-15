@@ -43,6 +43,8 @@ server.use((req, res, next) => {
 const validator = (requiredFields) => (req, res, next) => {
   for (let i = 0; i < requiredFields.length; i++) {
     const requiredField = requiredFields[i];
+    console.log("validate", requiredField)
+    console.log(req.body)
     if (!req.body[requiredField] || !req.body[requiredField].trim()) {
       res.status(400);
       res.json(
@@ -166,6 +168,7 @@ server.get("/me", requireLogin, (req, res) => {
   });
 });
 
+
 server.all("/users/:id", preventEditDefault);
 server.post("/users", (req, res, next) => {
   res.json({
@@ -174,23 +177,6 @@ server.post("/users", (req, res, next) => {
   });
 });
 server.put("/users/:id", validator(["nickname", "username", "createdAt"]));
-
-// required login
-server.all("/posts/:id", preventEditDefault);
-server.post(
-  "/posts",
-  requireLogin,
-  validator(["title", "body"]),
-  (req, res, next) => {
-    req.body.userId = req.jwtData.userId;
-    next();
-  }
-);
-server.put(
-  "/posts/:id",
-  requireLogin,
-  validator(["title", "body", "createdAt", "userId"])
-);
 
 // Use default router
 server.use(router);
