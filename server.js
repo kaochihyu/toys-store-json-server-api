@@ -126,6 +126,7 @@ server.post("/register", (req, res, next) => {
       username: req.body.username,
       nickname: req.body.nickname,
       password: req.body.password,
+      cart: [],
     })
     .write();
 
